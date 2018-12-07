@@ -34,9 +34,9 @@ services:
       - ./logstash/conf:/usr/share/logstash/my-confs
       - ./logstash/csv:/usr/share/logstash/csv
     links:
-      - nginxproxy
+      - elasticsearch
     depends_on:
-      - nginxproxy
+      - elasticsearch
 
   kibana:
     image: docker.elastic.co/kibana/kibana:6.4.0
