@@ -1,0 +1,69 @@
+version: '2'
+services:
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.0
+    ports: 
+      - "9200:9200"
+    environment:
+      - ELASTIC_PASSWORD=123change...     
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - path.data=/usr/share/elasticsearch/data
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch/data:/usr/share/elasticsearch/data      
+      
+  logstash:
+    image: docker.elastic.co/logstash/logstash:6.4.0
+    container_name: logstash
+    environment:
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD="123change..."
+      - NODE_NAME=my-logstash
+      - XPACK_MONITORING_ENABLED=true
+      - PATH_CONFIG=/usr/share/logstash/my-confs
+    volumes:
+      - ./logstash/conf:/usr/share/logstash/my-confs
+      - ./logstash/csv:/usr/share/logstash/csv
+    links:
+      - nginxproxy
+    depends_on:
+      - nginxproxy
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.4.0
+    container_name: kibana
+    ports: 
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD="123change..."
+      - ELASTICSEARCH_URL=http://nginxproxy:9200
+      - SERVER_NAME=my-kibana
+      - XPACK_SECURITY_ENABLED=true
+      - PATH_DATA=/usr/share/kibana/data
+    volumes:
+      - ./kibana/data:/usr/share/kibana/data
+      
+  nginxproxy:
+    container_name: nginxproxy
+    build:
+      context: ./
+      dockerfile: DockerfileNginx
+    ports:
+      - 80:80
+    restart: unless-stopped
+    volumes:
+      - ./nginx/filebeat.yml:/etc/filebeat/filebeat.yml
+      - ./nginx/default.conf:/etc/nginx/nginx.conf
+    links:
+      - elasticsearch
+      - kibana

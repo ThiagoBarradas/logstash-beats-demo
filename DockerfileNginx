@@ -1,0 +1,16 @@
+FROM chentex/docker-nginx-centos:latest
+
+RUN curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-6.4.0-x86_64.rpm
+RUN rpm -vi filebeat-6.4.0-x86_64.rpm
+
+RUN rm -rf /etc/nginx/conf.d
+
+RUN filebeat modules enable nginx
+RUN systemctl enable filebeat
+
+RUN yum install -y python-setuptools
+RUN easy_install supervisor
+
+COPY supervisord/supervisord.conf /etc/supervisord/supervisord.conf
+
+ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisord/supervisord.conf"]

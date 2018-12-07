@@ -1,0 +1,14 @@
+setup.template.settings:
+  index.number_of_shards: 3
+
+name: nginx-shipper
+
+fields:
+  service: nginx
+
+filebeat.config.modules.path: /etc/filebeat/modules.d/*.yml
+
+setup.dashboards.enabled: false
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
